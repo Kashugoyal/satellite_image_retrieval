@@ -100,8 +100,14 @@ def main():
             url  = 'http://ecn.t0.tiles.virtualearth.net/tiles/h' + qk +'.jpeg?g=131'
             r = requests.get(url, stream = True)
             print r.url
-            img = get_image(r)
-            display(img)
+            img_ny = get_image(r)
+            if (j==min(tileY1,tileY2)): img_py = img_ny
+            else: img_py = np.concatenate((img_py, img_ny), axis=0)
+            # display(img_py)
+        if (i==min(tileX1,tileX2)): img_px = img_py
+        else: img_px = np.concatenate((img_px, img_py), axis=1)
+        display(img_px)
+
 
 if __name__ == '__main__':
     main()
