@@ -47,11 +47,25 @@ def quad(tileX, tileY, levelOfDetail):
         key.append(digit)
     return ''.join(map(str,key))
 
+def get_image(request):
+    image = np.asarray(bytearray(request.content), dtype="uint8")
+    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    return image
+
 def display(image, window_name = 'img', delay = 0):
     cv2.namedWindow(window_name,cv2.WINDOW_NORMAL)
     cv2.imshow(window_name,image)
     cv2.waitKey(delay)
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
+
+def get_tiles(latitude1,longitude1,latitude2, longitude2, levelOfDetail):
+    a,b = latlon2pix(latitude1,longitude1,levelOfDetail)
+    x1,y1 = pixel2tile(a,b)
+    a,b = latlon2pix(latitude2,longitude2,levelOfDetail)
+    x2,y2 = pixel2tile(a,b)
+    return x1,y1,x2,y2
+
+
 
 
 def main():
@@ -64,24 +78,30 @@ def main():
     print (a.prettify())
     b = a.find('ImageUrl').contents[0]
     '''
-    lat = input ('Enter latitude: ')
-    lon = input ('Enter longitude: ')
-    levelOfDetail = input('Enter level of detail: ')
 
-    a,b = latlon2pix(lat,lon,levelOfDetail)
-    x,y = pixel2tile(a,b)
-    qk = quad(x,y,levelOfDetail)
-    # http://ecn.t0.tiles.virtualearth.net/tiles
-    url  = 'http://ecn.t0.tiles.virtualearth.net/tiles/h' + qk +'.jpeg?g=131'
-    r = requests.get(url, stream = True)
-    print r.url
-    image = np.asarray(bytearray(r.content), dtype="uint8")
-    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-    display(image)
+    lat1 = 48.0
+    lon1 = 52.0
+    lat2 = 49.0
+    lon2 = 53.0
+    levelOfDetail = 8
+
+    # lat1 = input ('Enter latitude1: ')
+    # lon1 = input ('Enter longitude1: ')
+    # lat2 = input ('Enter latitude2: ')
+    # lon2 = input ('Enter longitude2: ')
+    # levelOfDetail = input('Enter level of detail: ')
 
 
-
-
+    tileX1, tileY1, tileX2, tileY2 = get_tiles(lat1, lon1, lat2, lon2, levelOfDetail)
+    print tileX1, tileY1, tileX2, tileY2
+    for i in range(min(tileX1,tileX2),max(tileX1,tileX2)+1,1):
+        for j in range(min(tileY1,tileY2),max(tileY1,tileY2)+1,1):
+            qk = quad(i,j,levelOfDetail)
+            url  = 'http://ecn.t0.tiles.virtualearth.net/tiles/h' + qk +'.jpeg?g=131'
+            r = requests.get(url, stream = True)
+            print r.url
+            img = get_image(r)
+            display(img)
 
 if __name__ == '__main__':
     main()
