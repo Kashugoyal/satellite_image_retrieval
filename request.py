@@ -11,6 +11,11 @@ MaxLatitude = 85.05112878
 MinLongitude = -180
 MaxLongitude = 180
 
+a1= 0
+b1=0
+a2=0
+b2 = 0
+
 def Clip(n, minValue, maxValue):
     return min(max(n, minValue), maxValue)
 
@@ -59,10 +64,13 @@ def display(image, window_name = 'img', delay = 0):
     cv2.destroyAllWindows()
 
 def get_tiles(latitude1,longitude1,latitude2, longitude2, levelOfDetail):
-    a,b = latlon2pix(latitude1,longitude1,levelOfDetail)
-    x1,y1 = pixel2tile(a,b)
-    a,b = latlon2pix(latitude2,longitude2,levelOfDetail)
-    x2,y2 = pixel2tile(a,b)
+    global a1,b1,a2,b2
+    a1,b1 = latlon2pix(latitude1,longitude1,levelOfDetail)
+    print "pixels1",a1,b1
+    x1,y1 = pixel2tile(a1,b1)
+    a2,b2 = latlon2pix(latitude2,longitude2,levelOfDetail)
+    print "pixels2",a2,b2
+    x2,y2 = pixel2tile(a2,b2)
     return x1,y1,x2,y2
 
 
@@ -77,22 +85,24 @@ def main():
     print (a.prettify())
     b = a.find('ImageUrl').contents[0]
     '''
+# dummy values
+    lat1 = 10.2
+    lon1 = 10.2
+    lat2 = 10.1
+    lon2 = 10.1
+    # levelOfDetail = 12
 
-    # lat1 = 48.0
-    # lon1 = 52.0
-    # lat2 = 49.0
-    # lon2 = 53.0
-    # levelOfDetail = 8
-
-    lat1 = input ('Enter latitude1: ')
-    lon1 = input ('Enter longitude1: ')
-    lat2 = input ('Enter latitude2: ')
-    lon2 = input ('Enter longitude2: ')
+    # lat1 = input ('Enter latitude1: ')
+    # lon1 = input ('Enter longitude1: ')
+    # lat2 = input ('Enter latitude2: ')
+    # lon2 = input ('Enter longitude2: ')
     levelOfDetail = input('Enter level of detail: ')
 
 
     tileX1, tileY1, tileX2, tileY2 = get_tiles(lat1, lon1, lat2, lon2, levelOfDetail)
-    print "Total number of tiles: ", abs((tileX1 -tileX2)*(tileY1 - tileY2))
+    print "Total number of tiles: ", (abs(tileX1 -tileX2) +1) *(abs(tileY1 - tileY2) +1)
+    print tileX1, tileX1*256,(tileX1 +1)*256 ,tileY1, tileY1*256,(tileY1 +1)*256
+    print tileX2, tileX2*256,(tileX2 +1)*256 ,tileY2, tileY2*256,(tileY2 +1)*256
     print 'Getting images ...'
     for i in range(min(tileX1,tileX2),max(tileX1,tileX2)+1,1):
         for j in range(min(tileY1,tileY2),max(tileY1,tileY2)+1,1):
@@ -106,8 +116,11 @@ def main():
             # display(img_py)
         if (i==min(tileX1,tileX2)): img_px = img_py
         else: img_px = np.concatenate((img_px, img_py), axis=1)
-    display(img_px)
-    cv2.imwrite('output.png', img_px)
+    # display(img_px)
+    print "Obtained size of image is ", img_px.shape
+    final_img = img_px[min(a1,a2) - min(tileX1,tileX2)*256 : max(a1,a2) -min(tileX1,tileX2)*256,min(b1,b2) - min(tileY1,tileY2)*256 : max(b1,b2) - min(tileY1,tileY2)*256]
+    print "Sizing to bounding box i.e.", final_img.shape
+    cv2.imwrite('output.png', final_img)
 
 
 if __name__ == '__main__':
