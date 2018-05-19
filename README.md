@@ -1,5 +1,5 @@
 # Satelite Image Retrieval
-### Retieve highest resulotion aerial image of a given Latitude-Lingitude bounding box using Bing Maps API
+### Retieve highest resolution aerial image of a given Latitude-Longitude bounding box using Bing Maps API
 ---
 
 ### Dependencies
@@ -24,7 +24,7 @@
     ```
 
 ### Approach
-* The program expects a latitude-longitude bounding box for which the image is to be retrieved. The box is defined using two diagonal points.
+* The program expects a latitude-longitude bounding box for which the image is to be retrieved. The box is defined using two diagonally oppositte points.
 * Latitude and longitude values are converted to pixel values based on the highest level of detail (starting with `23`) and this is followed by getting tile numbers for respective pixels. 
 * Once we get the tiles for the corners, a loop iterates through all the intermediate tiles, generating quadkey for each and getting corresponding images. 
 * If the image is `blank`, the loop breaks and restarts with a level of detail one lower than the previous one. 
