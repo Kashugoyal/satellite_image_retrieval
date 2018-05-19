@@ -73,6 +73,32 @@ def get_tiles(latitude1,longitude1,latitude2, longitude2, levelOfDetail):
     x2,y2 = pixel2tile(a2,b2)
     return x1,y1,x2,y2
 
+def compare_images(img,ref):
+    if img.all() == ref.all():
+        return True
+    else:
+        return False
+
+def get_data(tileX1, tileY1, tileX2, tileY2, ref, levelOfDetail):
+    global img_px
+    for i in range(min(tileX1,tileX2),max(tileX1,tileX2)+1,1):
+        for j in range(min(tileY1,tileY2),max(tileY1,tileY2)+1,1):
+            qk = quad(i,j,levelOfDetail)
+            url  = 'http://ecn.t0.tiles.virtualearth.net/tiles/h' + qk +'.jpeg?g=131'
+            r = requests.get(url, stream = True)
+            # print r.url
+            img_ny = get_image(r)
+            if not compare_images(img_ny,ref):
+                if (j==min(tileY1,tileY2)): img_py = img_ny
+                else: img_py = np.concatenate((img_py, img_ny), axis=0)
+              # display(img_py)
+            else:
+              return False
+
+        if (i==min(tileX1,tileX2)): img_px = img_py
+        else: img_px = np.concatenate((img_px, img_py), axis=1)
+    # display(img_px)
+    return True
 
 
 def main():
@@ -86,10 +112,10 @@ def main():
     b = a.find('ImageUrl').contents[0]
     '''
 # dummy values
-    lat1 = 10.2
-    lon1 = 10.2
-    lat2 = 10.1
-    lon2 = 10.1
+    lat1 = 0.002
+    lon1 = 0.002
+    lat2 = 0.001
+    lon2 = 0.001
     # levelOfDetail = 12
 
     # lat1 = input ('Enter latitude1: ')
@@ -98,29 +124,25 @@ def main():
     # lon2 = input ('Enter longitude2: ')
     levelOfDetail = input('Enter level of detail: ')
 
+    ref = cv2.imread("ref.png",1)
 
-    tileX1, tileY1, tileX2, tileY2 = get_tiles(lat1, lon1, lat2, lon2, levelOfDetail)
-    print "Total number of tiles: ", (abs(tileX1 -tileX2) +1) *(abs(tileY1 - tileY2) +1)
-    print tileX1, tileX1*256,(tileX1 +1)*256 ,tileY1, tileY1*256,(tileY1 +1)*256
-    print tileX2, tileX2*256,(tileX2 +1)*256 ,tileY2, tileY2*256,(tileY2 +1)*256
     print 'Getting images ...'
-    for i in range(min(tileX1,tileX2),max(tileX1,tileX2)+1,1):
-        for j in range(min(tileY1,tileY2),max(tileY1,tileY2)+1,1):
-            qk = quad(i,j,levelOfDetail)
-            url  = 'http://ecn.t0.tiles.virtualearth.net/tiles/h' + qk +'.jpeg?g=131'
-            r = requests.get(url, stream = True)
-            # print r.url
-            img_ny = get_image(r)
-            if (j==min(tileY1,tileY2)): img_py = img_ny
-            else: img_py = np.concatenate((img_py, img_ny), axis=0)
-            # display(img_py)
-        if (i==min(tileX1,tileX2)): img_px = img_py
-        else: img_px = np.concatenate((img_px, img_py), axis=1)
-    # display(img_px)
+    
+    while True:
+        tileX1, tileY1, tileX2, tileY2 = get_tiles(lat1, lon1, lat2, lon2, levelOfDetail)
+        print "Total number of tiles: ", (abs(tileX1 -tileX2) +1) *(abs(tileY1 - tileY2) +1)
+        if get_data(tileX1, tileY1, tileX2, tileY2, ref, levelOfDetail):
+            break
+        else:
+            levelOfDetail -=1
+            print "Reducing level of detail ... , now ", levelOfDetail
+
+
     print "Obtained size of image is ", img_px.shape
     final_img = img_px[min(a1,a2) - min(tileX1,tileX2)*256 : max(a1,a2) -min(tileX1,tileX2)*256,min(b1,b2) - min(tileY1,tileY2)*256 : max(b1,b2) - min(tileY1,tileY2)*256]
     print "Sizing to bounding box i.e.", final_img.shape
     cv2.imwrite('output.png', final_img)
+    display(final_img)
 
 
 if __name__ == '__main__':
