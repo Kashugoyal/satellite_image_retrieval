@@ -1,3 +1,4 @@
+#!usr/bin/env python
 import requests
 import numpy as np
 import cv2
@@ -66,10 +67,8 @@ def display(image, window_name = 'img', delay = 0):
 def get_tiles(latitude1,longitude1,latitude2, longitude2, levelOfDetail):
     global a1,b1,a2,b2
     a1,b1 = latlon2pix(latitude1,longitude1,levelOfDetail)
-    print "pixels1",a1,b1
     x1,y1 = pixel2tile(a1,b1)
     a2,b2 = latlon2pix(latitude2,longitude2,levelOfDetail)
-    print "pixels2",a2,b2
     x2,y2 = pixel2tile(a2,b2)
     return x1,y1,x2,y2
 
@@ -93,12 +92,13 @@ def get_data(tileX1, tileY1, tileX2, tileY2, ref, levelOfDetail):
                 else: img_py = np.concatenate((img_py, img_ny), axis=0)
               # display(img_py)
             else:
+              print "Blank image detected..."
               return False
-
         if (i==min(tileX1,tileX2)): img_px = img_py
         else: img_px = np.concatenate((img_px, img_py), axis=1)
     # display(img_px)
     return True
+
 
 
 def main():
@@ -112,19 +112,19 @@ def main():
     b = a.find('ImageUrl').contents[0]
     '''
 # dummy values
-    lat1 = 0.002
-    lon1 = 0.002
-    lat2 = 0.001
-    lon2 = 0.001
-    # levelOfDetail = 12
+    # lat1 = 0.002
+    # lon1 = 0.002
+    # lat2 = 0.001
+    # lon2 = 0.001
+    levelOfDetail = 23
 
-    # lat1 = input ('Enter latitude1: ')
-    # lon1 = input ('Enter longitude1: ')
-    # lat2 = input ('Enter latitude2: ')
-    # lon2 = input ('Enter longitude2: ')
-    levelOfDetail = input('Enter level of detail: ')
+    lat1 = input ('Enter latitude1: ')
+    lon1 = input ('Enter longitude1: ')
+    lat2 = input ('Enter latitude2: ')
+    lon2 = input ('Enter longitude2: ')
+    # levelOfDetail = input('Enter level of detail: ')
 
-    ref = cv2.imread("ref.png",1)
+    ref = cv2.imread("images/ref.png",1)
 
     print 'Getting images ...'
     
@@ -140,9 +140,10 @@ def main():
 
     print "Obtained size of image is ", img_px.shape
     final_img = img_px[min(a1,a2) - min(tileX1,tileX2)*256 : max(a1,a2) -min(tileX1,tileX2)*256,min(b1,b2) - min(tileY1,tileY2)*256 : max(b1,b2) - min(tileY1,tileY2)*256]
-    print "Sizing to bounding box i.e.", final_img.shape
+    print "Cropping to bounding box i.e. pixels ", final_img.shape
     cv2.imwrite('output.png', final_img)
     display(final_img)
+    print "Image saved as 'Output.png'"
 
 
 if __name__ == '__main__':
