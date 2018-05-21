@@ -73,7 +73,9 @@ def get_tiles(latitude1,longitude1,latitude2, longitude2, levelOfDetail):
     return x1,y1,x2,y2
 
 def compare_images(img,ref):
-    if img.all() == ref.all():
+    # print img.type()
+    v = img == ref
+    if v.all() == True:
         return True
     else:
         return False
@@ -118,10 +120,10 @@ def main():
     # lon2 = 0.001
     levelOfDetail = 23
 
-    lat1 = input ('Enter latitude1: ')
-    lon1 = input ('Enter longitude1: ')
-    lat2 = input ('Enter latitude2: ')
-    lon2 = input ('Enter longitude2: ')
+    # lat1 = input ('Enter latitude1: ')
+    # lon1 = input ('Enter longitude1: ')
+    # lat2 = input ('Enter latitude2: ')
+    # lon2 = input ('Enter longitude2: ')
     # levelOfDetail = input('Enter level of detail: ')
 
     ref = cv2.imread("images/ref.png",1)
