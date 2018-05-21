@@ -1,8 +1,9 @@
-#!usr/bin/env python
+#!/usr/bin/env python
 import requests
 import numpy as np
 import cv2
 import math
+import sys
 # from bs4 import BeautifulSoup as bs
 
 
@@ -80,10 +81,24 @@ def compare_images(img,ref):
     else:
         return False
 
-def get_data(tileX1, tileY1, tileX2, tileY2, ref, levelOfDetail):
+
+def progress(counter, num_tiles):
+    len = (counter /num_tiles)*10
+    text =  "\rProgress:" + str((counter/num_tiles)*100) + " %"
+
+    # text = "\rProgress: [{0}]".format("#"*len + "-"*(10-len))
+    sys.stdout.write(text)
+    sys.stdout.flush()
+
+
+def get_data(tileX1, tileY1, tileX2, tileY2, ref, levelOfDetail, num_tiles):
     global img_px
+    counter = 0.0
     for i in range(min(tileX1,tileX2),max(tileX1,tileX2)+1,1):
         for j in range(min(tileY1,tileY2),max(tileY1,tileY2)+1,1):
+            counter+=1
+            progress(counter,num_tiles)
+            # print "Progress:", (counter/num_tiles)*100,"%"
             qk = quad(i,j,levelOfDetail)
             url  = 'http://ecn.t0.tiles.virtualearth.net/tiles/h' + qk +'.jpeg?g=131'
             r = requests.get(url, stream = True)
@@ -94,7 +109,7 @@ def get_data(tileX1, tileY1, tileX2, tileY2, ref, levelOfDetail):
                 else: img_py = np.concatenate((img_py, img_ny), axis=0)
               # display(img_py)
             else:
-              print "Blank image detected..."
+              print "\nBlank image detected..."
               return False
         if (i==min(tileX1,tileX2)): img_px = img_py
         else: img_px = np.concatenate((img_px, img_py), axis=1)
@@ -114,16 +129,16 @@ def main():
     b = a.find('ImageUrl').contents[0]
     '''
 # dummy values
-    # lat1 = 0.002
-    # lon1 = 0.002
-    # lat2 = 0.001
-    # lon2 = 0.001
+    # lat1 = 48.02
+    # lon1 = 48.02
+    # lat2 = 48.03
+    # lon2 = 48.03
     levelOfDetail = 23
 
-    # lat1 = input ('Enter latitude1: ')
-    # lon1 = input ('Enter longitude1: ')
-    # lat2 = input ('Enter latitude2: ')
-    # lon2 = input ('Enter longitude2: ')
+    lat1 = input ('Enter latitude1: ')
+    lon1 = input ('Enter longitude1: ')
+    lat2 = input ('Enter latitude2: ')
+    lon2 = input ('Enter longitude2: ')
     # levelOfDetail = input('Enter level of detail: ')
 
     ref = cv2.imread("images/ref.png",1)
@@ -132,15 +147,16 @@ def main():
     
     while True:
         tileX1, tileY1, tileX2, tileY2 = get_tiles(lat1, lon1, lat2, lon2, levelOfDetail)
-        print "Total number of tiles: ", (abs(tileX1 -tileX2) +1) *(abs(tileY1 - tileY2) +1)
-        if get_data(tileX1, tileY1, tileX2, tileY2, ref, levelOfDetail):
+        num_tiles = (abs(tileX1 -tileX2) +1) *(abs(tileY1 - tileY2) +1)
+        print "Total number of tiles: ", num_tiles
+        if get_data(tileX1, tileY1, tileX2, tileY2, ref, levelOfDetail, num_tiles):
             break
         else:
             levelOfDetail -=1
             print "Reducing level of detail ... , now ", levelOfDetail
 
 
-    print "Obtained size of image is ", img_px.shape
+    print "\nObtained size of image is ", img_px.shape
     final_img = img_px[min(a1,a2) - min(tileX1,tileX2)*256 : max(a1,a2) -min(tileX1,tileX2)*256,min(b1,b2) - min(tileY1,tileY2)*256 : max(b1,b2) - min(tileY1,tileY2)*256]
     print "Cropping to bounding box i.e. pixels ", final_img.shape
     cv2.imwrite('output.png', final_img)
